@@ -63,25 +63,11 @@ def save_config(url, username, password, secret) :
         print(e)
 
 def ensure_browser_installed():
-    with sync_playwright() as p:
-        has_chromium = os.path.exists(p.chromium.executable_path)
-    if not has_chromium:
-        print("専用ブラウザがインストールされていません．")
-        try:
-            print("ブラウザをダウンロードします．続行しますか？(300MB程度) y/n: ")
-            while(True):
-                tag = input()
-                if tag == "y":
-                    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
-                    break
-                elif tag == "n":
-                    sys.exit()
-                else:
-                    print("y / n で入力してください．")
-
-        except Exception as e:
-            print(f"拡張機能ダウンロード中にエラーが発生しました．: {e}")
-            sys.exit()
+    try:
+       subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
+    except Exception as e:
+        print(f"ブラウザのダウンロード中にエラーが発生しました．: {e}")
+        sys.exit()
 
 # --- 2. 初回起動 ---
 def show_setup_gui(existing_config=None):
