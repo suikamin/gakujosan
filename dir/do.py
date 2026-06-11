@@ -30,9 +30,9 @@ def save_config(url, username, password, secret) :
         json.dump(config, f, indent=4, ensure_ascii=False)
 
 def ensure_browser_installed():
-    print("ブラウザ環境の確認中...")
+    print("専用ブラウザがインストールされていません．")
     try:
-        print("拡張機能をダウンロードします．続行しますか？(300MB程度) y/n")
+        print("ブラウザをダウンロードします．続行しますか？(300MB程度) y/n: ")
         while(True):
             tag = input()
             if tag == "y":
@@ -41,11 +41,12 @@ def ensure_browser_installed():
             elif tag == "n":
                 sys.exit()
             else:
-                print(("y / n で入力してください．"))
+                print("y / n で入力してください．")
 
     except Exception as e:
         print(f"拡張機能ダウンロード中にエラーが発生しました．: {e}")
         sys.exit()
+
 # --- 2. 初回起動 ---
 def show_setup_gui(existing_config=None):
     def on_submit():
@@ -96,6 +97,7 @@ def show_setup_gui(existing_config=None):
     tk.Button(root, text="設定を保存してログイン", command=on_submit, bg="#4CAF50", fg="white").pack(pady=20)
     root.mainloop()
 
+# --- 3. 自動ログイン ---
 def auto_login():
     config = load_config()
     if not config: 
