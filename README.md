@@ -23,7 +23,7 @@
 https://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf  
 このサイト↑の４ページを参考にしてください．
 
-このツールはPythonによって記述されていて、Playwrightが使用されています．
+このツールはPythonによって記述されていて、playwrightとpyotpが使用されています．
 Pythonで実行する場合、以下のコマンドを実行してください．(※pythonとpipがinstallされている前提)  
 ```
 pip install playwright  
