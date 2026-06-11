@@ -1,1 +1,1 @@
-from .do import auto_login, show_setup_gui, load_config, ensure_browser_installed
+from .do import auto_login, show_setup_gui, load_config

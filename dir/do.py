@@ -8,6 +8,13 @@ import platform
 from tkinter import messagebox
 from playwright.sync_api import sync_playwright
 
+# === 同梱ブラウザのパスをPlaywrightに教える設定 ===
+if getattr(sys, 'frozen', False):
+    # exe化されて実行されている場合
+    bundle_dir = sys._MEIPASS #_MEIPASS: exeによって実行されているときだけ作成される特別な変数
+    # Playwrightがブラウザを探すフォルダを、exe内部の一時展開先に固定する
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(bundle_dir, "ms-playwright")
+
 CONFIG_FILE = "config.json"
 
 # --- 1. 設定情報の読み込みと保存 ---
@@ -61,13 +68,6 @@ def save_config(url, username, password, secret) :
             os.chmod(f".{CONFIG_FILE}", 0o644)
     except Exception as e:
         print(e)
-
-def ensure_browser_installed():
-    try:
-       subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
-    except Exception as e:
-        print(f"ブラウザのダウンロード中にエラーが発生しました．: {e}")
-        sys.exit()
 
 # --- 2. 初回起動 ---
 def show_setup_gui(existing_config=None):

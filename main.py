@@ -1,4 +1,4 @@
-from dir import show_setup_gui, load_config, auto_login, ensure_browser_installed
+from dir import show_setup_gui, load_config, auto_login
 import sys
 
 if __name__ == "__main__" :
@@ -8,7 +8,6 @@ if __name__ == "__main__" :
         show_setup_gui(existing_config=load_config())
     
     elif load_config() is None:
-        ensure_browser_installed()
         show_setup_gui(existing_config=None)
 
     else:
