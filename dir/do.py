@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import tkinter as tk
+import platform
 from tkinter import messagebox
 from playwright.sync_api import sync_playwright
 
@@ -26,26 +27,61 @@ def save_config(url, username, password, secret) :
         "password" : password,
         "secret" : secret.replace(" ", "")
     }
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f :
+    
+    # すでにファイルが存在する場合、上書きできるように一旦属性を解除する
+    if os.path.exists(CONFIG_FILE):
+        try:
+            if platform.system() == "Windows":
+                # Windows用の処理
+                subprocess.run(["attrib", "-h", "-r", CONFIG_FILE])
+            else:
+                # Mac / Linux用の処理
+                # 1. 先頭にドットをつけてリネーム
+                os.rename(CONFIG_FILE, f".{CONFIG_FILE}")
+                # 2. 権限変更
+                os.chmod(f".{CONFIG_FILE}", 0o400)
+        except Exception as e:
+            print(e)
+
+    # JSONの書き込み
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=4, ensure_ascii=False)
+    print("config.jsonの編集が完了しました．")
+
+    # 再び隠しファイル＆読み取り専用に設定
+    try:
+        if platform.system() == "Windows":
+            # Windows用の処理
+            subprocess.run(["attrib", "+h", "+r", CONFIG_FILE])
+        else:
+            # Mac / Linux用の処理
+            # 1. 先頭のドットを消す
+            os.rename(CONFIG_FILE, f"{CONFIG_FILE}")
+            # 2. 権限変更
+            os.chmod(f".{CONFIG_FILE}", 0o644)
+    except Exception as e:
+        print(e)
 
 def ensure_browser_installed():
-    print("専用ブラウザがインストールされていません．")
-    try:
-        print("ブラウザをダウンロードします．続行しますか？(300MB程度) y/n: ")
-        while(True):
-            tag = input()
-            if tag == "y":
-                subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
-                break
-            elif tag == "n":
-                sys.exit()
-            else:
-                print("y / n で入力してください．")
+    with sync_playwright() as p:
+        has_chromium = os.path.exists(p.chromium.executable_path)
+    if not has_chromium:
+        print("専用ブラウザがインストールされていません．")
+        try:
+            print("ブラウザをダウンロードします．続行しますか？(300MB程度) y/n: ")
+            while(True):
+                tag = input()
+                if tag == "y":
+                    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
+                    break
+                elif tag == "n":
+                    sys.exit()
+                else:
+                    print("y / n で入力してください．")
 
-    except Exception as e:
-        print(f"拡張機能ダウンロード中にエラーが発生しました．: {e}")
-        sys.exit()
+        except Exception as e:
+            print(f"拡張機能ダウンロード中にエラーが発生しました．: {e}")
+            sys.exit()
 
 # --- 2. 初回起動 ---
 def show_setup_gui(existing_config=None):
@@ -142,3 +178,4 @@ def auto_login():
             print(f"ブラウザが終了しました．: {e}")
         finally:
             browser.close()
+            print("アプリを終了します．")
