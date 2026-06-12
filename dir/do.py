@@ -69,6 +69,10 @@ def save_config(url, username, password, secret) :
     except Exception as e:
         print(e)
 
+def get_windows_download_dir():
+    """Windowsの標準『ダウンロード』フォルダのパスを安全に取得する関数"""
+    return os.path.join(os.environ["USERPROFILE"], "Downloads")
+
 # --- 2. 初回起動 ---
 def show_setup_gui(existing_config=None):
     def on_submit():
@@ -125,6 +129,7 @@ def auto_login():
     if not config: 
         return
     
+    # ==== ワンタイムパスワードの生成 ====
     try:
         totp = pyotp.TOTP(config["secret"])
         otp_code = totp.now()
@@ -132,11 +137,37 @@ def auto_login():
         print(f"秘密鍵エラー: {e}")
         return
     
+    download_dir = get_windows_download_dir()
+
+    # ==== Chromiumの実行 ====
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, args=["--start-maximized"])
-        context = browser.new_context(no_viewport=True)
+        browser = p.chromium.launch(
+            headless = False,
+            args=["--start-maximized"]
+            )
+        context = browser.new_context(
+            no_viewport=True,
+            accept_downloads=True
+            )
+
         page = context.new_page()
 
+        # --- EventListener用の関数 ---
+        def handle_download(download):
+            "ダウンロードを検知して、正常に保存する"
+            try:
+                filename = download.suggested_filename
+                save_path = os.path.join(download_dir, filename)
+                download.save_as(save_path)
+                print(f"ダウンロードが完了しました．{filename}")
+            
+            except Exception as e:
+                print(f"ダウンロードエラー: {e}")
+
+        # ==== ダウンロードのEventListender ====
+        context.on("download", handle_download)
+
+        # ===== ログインのtry =====
         try:
             # ログインページへ
             page.goto(config["url"])
@@ -146,14 +177,42 @@ def auto_login():
             page.fill('input[name="password"]', config["password"])
             page.click('button[type="submit"]')
 
-            try:
-                page.wait_for_selector('input[name="ninshoCode"]')
+            # =======================================================
+            #  どちらの画面が先に来るかを判定するIF文
+            # =======================================================
+            # 1. 2段階認証の入力欄を指すセレクター
+            otp_selector = 'input[name="ninshoCode"]'
+
+            # 5秒間、どちらかの要素が画面に現れるのをループで監視する
+            is_otp_page = False
+            is_skipped = False
+            
+            for _ in range(50):  # 0.1秒 × 50回 ＝ 最大5秒待つ
+                # パターンA：もし認証コード入力欄が見つかったら
+                if page.locator(otp_selector).is_visible():
+                    is_otp_page = True
+                    break
+                    
+                # パターンB：もし認証コード欄が出ずに、URLが変わったら
+                if r"page=main" in page.url:
+                    is_skipped = True
+                    break
+                    
+                page.wait_for_timeout(100) # 0.1秒待つ
+
+            # --- 判定後の条件分岐（IF） ---
+            if is_otp_page:
+                print("2段階認証画面が表示されました。コードを入力します。")
                 page.fill('input[name="ninshoCode"]', otp_code)
                 page.click('button[class="sw10 sh2"]')
-            except:
-                print("二段階認証は不要でした．")
 
-            print("ログインが成功しました．")
+            elif is_skipped:
+                print("2段階認証はスキップされました。")
+
+            else:
+                print("エラー：5秒経っても認証画面もメニュー画面も確認できませんでした。")
+        
+            print("ログインが成功しました．")            
 
             while True:
                 if page.is_closed():
