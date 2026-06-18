@@ -114,8 +114,11 @@ def auto_login():
     
     # ==== ワンタイムパスワードの生成 ====
     try:
-        totp = pyotp.TOTP(config["secret"])
-        otp_code = totp.now()
+        if (len(config["secret"]) == 32):
+            totp = pyotp.TOTP(config["secret"])
+            otp_code = totp.now()
+        else:
+            raise Exception
     except Exception as e:
         print(f"秘密鍵エラー: {e}")
         messagebox.showerror("秘密鍵エラー", f"秘密鍵を再入力してください．または、以下のサイトを参考にOTPを再設定してください．\nhttps://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf\n{e}")
