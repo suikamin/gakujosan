@@ -26,8 +26,14 @@ def save_config(url, username, password, secret) :
         "url" : url,
         "username" : username,
         "password" : password,
-        "secret" : secret.replace(" ", "")
+        "secret" : (secret.replace(" ", "")).strip()
     }
+
+    notification.notify(
+        title="設定保存中...",
+        message="この操作には数秒かかることがあります...",
+        app_name="gakujosan"
+        )
     
     # すでにファイルが存在する場合、上書きできるように一旦属性を解除する
     if os.path.exists(CONFIG_FILE):
@@ -112,7 +118,7 @@ def auto_login():
         otp_code = totp.now()
     except Exception as e:
         print(f"秘密鍵エラー: {e}")
-        messagebox.showerror("秘密鍵エラー", "秘密鍵を再入力してください．または、以下のサイトを参考にOTPを再設定してください．\nhttps://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf")
+        messagebox.showerror("秘密鍵エラー", f"秘密鍵を再入力してください．または、以下のサイトを参考にOTPを再設定してください．\nhttps://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf\n{e}")
         show_setup_gui(existing_config=load_config())
         return
     
