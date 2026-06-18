@@ -23,10 +23,19 @@
 https://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf  
 このサイト↑の４ページを参考にしてください．
 
-このツールはPythonによって記述されていて、playwrightとpyotpが使用されています．
-Pythonで実行する場合、以下のコマンドを実行してください．(※pythonとpipがinstallされている前提)  
+このツールはPythonによってplaywrightとpyotpが使用され、pyinstallerでonedir化されています。
+
+main.exeが開かないという声を頂いています。ローカルのPythonなら必ず実行できます。リポジトリをクローンするか、.zipでディレクトリをダウンロードして、解凍して、コマンドプロンプトで以下のコマンドを１行ずつ実行して見てください。
+```
+winget install python.python
+```
+*PCを再起動する。*
 ```
 pip install playwright  
 pip install pyotp  
 playwright install chromium
+```
+*ダウンロードして解凍した、main.pyがあるフォルダをエクスプローラーで開き、適当な場所で右クリック→ターミナルで開くを押下*
+```
+python main.py
 ```
