@@ -1,18 +1,12 @@
-import pyotp
-import os
-import json
-import subprocess
-import sys
+import pyotp ,os, subprocess, json, sys, platform
 import tkinter as tk
-import platform
 from tkinter import messagebox
+from plyer import notification
 from playwright.sync_api import sync_playwright
 
 # === 同梱ブラウザのパスをPlaywrightに教える設定 ===
 if getattr(sys, 'frozen', False):
-    # exe化されて実行されている場合
-    bundle_dir = sys._MEIPASS #_MEIPASS: exeによって実行されているときだけ作成される特別な変数
-    # Playwrightがブラウザを探すフォルダを、exe内部の一時展開先に固定する
+    bundle_dir = sys._MEIPASS 
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(bundle_dir, "ms-playwright")
 
 CONFIG_FILE = "config.json"
@@ -38,15 +32,7 @@ def save_config(url, username, password, secret) :
     # すでにファイルが存在する場合、上書きできるように一旦属性を解除する
     if os.path.exists(CONFIG_FILE):
         try:
-            if platform.system() == "Windows":
-                # Windows用の処理
-                subprocess.run(["attrib", "-h", "-r", CONFIG_FILE])
-            else:
-                # Mac / Linux用の処理
-                # 1. 先頭にドットをつけてリネーム
-                os.rename(CONFIG_FILE, f".{CONFIG_FILE}")
-                # 2. 権限変更
-                os.chmod(f".{CONFIG_FILE}", 0o400)
+            subprocess.run(["attrib", "-h", "-r", CONFIG_FILE])
         except Exception as e:
             print(e)
 
@@ -57,15 +43,7 @@ def save_config(url, username, password, secret) :
 
     # 再び隠しファイル＆読み取り専用に設定
     try:
-        if platform.system() == "Windows":
-            # Windows用の処理
-            subprocess.run(["attrib", "+h", "+r", CONFIG_FILE])
-        else:
-            # Mac / Linux用の処理
-            # 1. 先頭のドットを消す
-            os.rename(CONFIG_FILE, f"{CONFIG_FILE}")
-            # 2. 権限変更
-            os.chmod(f".{CONFIG_FILE}", 0o644)
+        subprocess.run(["attrib", "+h", "+r", CONFIG_FILE])
     except Exception as e:
         print(e)
 
@@ -86,7 +64,6 @@ def show_setup_gui(existing_config=None):
             return
         
         save_config(url, user, pw, sec)
-        messagebox.showinfo("成功", "設定を保存しました。自動ログインを開始します。")
         root.destroy()
         auto_login()
 
@@ -120,7 +97,7 @@ def show_setup_gui(existing_config=None):
     entry_sec.insert(0, init_sec)
     entry_sec.pack()
 
-    tk.Button(root, text="設定を保存してログイン", command=on_submit, bg="#4CAF50", fg="white").pack(pady=20)
+    tk.Button(root, text="設定を保存してログインを開始", command=on_submit, bg="#4CAF50", fg="white").pack(pady=20)
     root.mainloop()
 
 # --- 3. 自動ログイン ---
@@ -135,9 +112,17 @@ def auto_login():
         otp_code = totp.now()
     except Exception as e:
         print(f"秘密鍵エラー: {e}")
+        messagebox.showerror("秘密鍵エラー", "秘密鍵を再入力してください．または、以下のサイトを参考にOTPを再設定してください．\nhttps://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf")
+        show_setup_gui(existing_config=load_config())
         return
     
     download_dir = get_windows_download_dir()
+
+    notification.notify(
+        title = "ブラウザを起動中...",
+        message = "起動には数秒かかることがあります...",
+        app_name = "gakujosan"
+    )
 
     # ==== Chromiumの実行 ====
     with sync_playwright() as p:
