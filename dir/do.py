@@ -4,11 +4,6 @@ from tkinter import messagebox
 from plyer import notification
 from playwright.sync_api import sync_playwright
 
-# === 同梱ブラウザのパスをPlaywrightに教える設定 ===
-if getattr(sys, 'frozen', False):
-    bundle_dir = sys._MEIPASS 
-    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(bundle_dir, "ms-playwright")
-
 CONFIG_FILE = "config.json"
 
 # --- 1. 設定情報の読み込みと保存 ---
