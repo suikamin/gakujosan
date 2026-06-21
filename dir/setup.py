@@ -1,7 +1,7 @@
 # セットアップ用の処理を書くファイルです。
 
 import os, sys, json
-import consts
+from . import consts, gui
 from plyer import notification
 
 # setupをします
@@ -13,7 +13,7 @@ def setup():
         os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(sys._MEIPASS, "ms-playwright")
 
 # 設定情報の読み込みと保存
-def load_config() :
+def load_config():
     # config.jsonの存在確認及びロード
     if os.path.exists(consts.CONFIG_PATH) == False:
         # json作成のfuncに移動
@@ -25,28 +25,6 @@ def load_config() :
         except json.JSONDecodeError:
             print("json形式が不正です。当該jsonを削除し、アプリケーションを再起動してください。")
             return None
-
-
-config = {
-    "username" : "",
-    "password" : "",
-    "secret" : ""
-}
-
-def save_config(username, password, secret_key):
-    config["password"] = password
-    config["username"] = username
-    config["secret_kye"] = secret_key
-
-    save_json(config)
-
-    notification.notify(
-    title="設定保存中...",
-    message="この操作には数秒かかることがあります...",
-    app_name="gakujosan"
-    )
-
-    print("info: 設定保存中")
 
 def save_json(config):
     try:

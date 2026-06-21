@@ -1,84 +1,20 @@
-import pyotp ,os, subprocess, json, sys, platform
+import os, subprocess, pyotp
 import tkinter as tk
 from tkinter import messagebox
 from plyer import notification
-from playwright.sync_api import sync_playwright
+# from playwright.sync_api import sync_playwright
 
-import consts
+from . import consts, setup
 
-
-
-def save_config(url, username, password, secret) :
-    
-    # すでにファイルが存在する場合、上書きできるように一旦属性を解除する
-    if os.path.exists(consts.CONFIG_PATH):
-        try:
-            subprocess.run(["attrib", "-h", "-r", consts.CONFIG_PATH])
-        except Exception as e:
-            print(e)
-
-    # 再び隠しファイル＆読み取り専用に設定
-    try:
-        subprocess.run(["attrib", "+h", "+r", consts.CONFIG_PATH])
-    except Exception as e:
-        print(e)
-
-def get_windows_download_dir():
-    """Windowsの標準『ダウンロード』フォルダのパスを安全に取得する関数"""
-    return os.path.join(os.environ["USERPROFILE"], "Downloads")
-
-# --- 2. 初回起動 ---
-def show_setup_gui(existing_config=None):
-    def on_submit():
-        url = entry_url.get()
-        user = entry_user.get()
-        pw = entry_pw.get()
-        sec = entry_sec.get()
-
-        if not (url and user and pw and sec):
-            messagebox.showwarning("入力エラー", "すべての項目を入力してください。")
-            return
-        
-        save_config(url, user, pw, sec)
-        root.destroy()
-        auto_login()
-
-    root = tk.Tk()
-    root.title("Campussquare 自動ログイン設定")
-    root.geometry("450x320")
-
-    # 既存の設定がある場合はそれを初期値にし、なければ空文字にする
-    init_url = "https://gakujo.iess.niigata-u.ac.jp/campusweb/campusportal.do"
-    init_user = existing_config.get("username", "") if existing_config else ""
-    init_pw = existing_config.get("password", "") if existing_config else ""
-    init_sec = existing_config.get("secret", "") if existing_config else ""
-
-    tk.Label(root, text="Campussquare ログインURL:").pack(pady=5)
-    entry_url = tk.Entry(root, width=50)
-    entry_url.insert(0, init_url)
-    entry_url.pack()
-
-    tk.Label(root, text="学籍番号:").pack(pady=5)
-    entry_user = tk.Entry(root, width=50)
-    entry_user.insert(0, init_user)
-    entry_user.pack()
-
-    tk.Label(root, text="パスワード:").pack(pady=5)
-    entry_pw = tk.Entry(root, width=50, show="*")
-    entry_pw.insert(0, init_pw)
-    entry_pw.pack()
-
-    tk.Label(root, text="Google Authenticator 秘密鍵:").pack(pady=5)
-    entry_sec = tk.Entry(root, width=50)
-    entry_sec.insert(0, init_sec)
-    entry_sec.pack()
-
-    tk.Button(root, text="設定を保存してログインを開始", command=on_submit, bg="#4CAF50", fg="white").pack(pady=20)
-    root.mainloop()
+config = {
+    "username" : {"displayName": "学情ID", "rawData": ""},
+    "password" : {"displayName": "パスワード", "rawData": ""},
+    "secret_key" : {"displayName": "秘密鍵", "rawData": ""}
+}
 
 # --- 3. 自動ログイン ---
 def auto_login():
-    config = load_config()
+    config = setup.load_config()
     if not config: 
         return
     
@@ -92,7 +28,7 @@ def auto_login():
     except Exception as e:
         print(f"秘密鍵エラー: {e}")
         messagebox.showerror("秘密鍵エラー", f"秘密鍵を再入力してください．または、以下のサイトを参考にOTPを再設定してください．\nhttps://www.iess.niigata-u.ac.jp/acpb/upload/20231016105024000213600.pdf\n{e}")
-        show_setup_gui(existing_config=load_config())
+        # show_setup_gui(existing_config=setup.load_config())
         return
     
     download_dir = get_windows_download_dir()
