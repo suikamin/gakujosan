@@ -26,12 +26,17 @@ def load_config() :
             print("json形式が不正です。当該jsonを削除し、アプリケーションを再起動してください。")
             return None
 
+
+config = {
+    "username" : "",
+    "password" : "",
+    "secret" : ""
+}
+
 def save_config(username, password, secret_key):
-    config = {
-        "username" : username,
-        "password" : password,
-        "secret" : (secret_key.replace(" ", "")).strip()
-    }
+    config["password"] = password
+    config["username"] = username
+    config["secret_kye"] = secret_key
 
     save_json(config)
 
