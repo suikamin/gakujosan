@@ -8,7 +8,7 @@ class InputWindow:
         self.inputDict = inputDict
         self.root = tk.Tk()
 
-        self.ui_wigets: dict[str, tk.Widget] = {}
+        self.ui_wigets: dict[str, tk.Entry] = {}
     
     def whenSubmitted(self) :
         for key, value in self.inputDict.items():
@@ -22,6 +22,7 @@ class InputWindow:
             tk.Label(self.root, text=value["displayName"]).pack()
             print(value["displayName"])
             self.ui_wigets[key] = tk.Entry(self.root)
+            self.ui_wigets[key].insert(0, self.inputDict[key]["rawData"])
             self.ui_wigets[key].pack()
 
         button = tk.Button(self.root, text="ログイン", command=self.whenSubmitted)

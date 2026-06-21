@@ -17,6 +17,7 @@ def load_config():
     # config.jsonの存在確認及びロード
     if os.path.exists(consts.CONFIG_PATH) == False:
         # json作成のfuncに移動
+        print("info :（jsonが）ないです")
         return None
     
     with open(consts.CONFIG_PATH, "r", encoding="utf-8") as f:
