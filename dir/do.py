@@ -4,47 +4,22 @@ from tkinter import messagebox
 from plyer import notification
 from playwright.sync_api import sync_playwright
 
-CONFIG_FILE = "config.json"
+import consts
 
-# --- 1. 設定情報の読み込みと保存 ---
-def load_config() :
-    """
-    起動時にconfig.jsonが存在しているなら、ファイルを開く
-    """
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return None
+
 
 def save_config(url, username, password, secret) :
-    config = {
-        "url" : url,
-        "username" : username,
-        "password" : password,
-        "secret" : (secret.replace(" ", "")).strip()
-    }
-
-    notification.notify(
-        title="設定保存中...",
-        message="この操作には数秒かかることがあります...",
-        app_name="gakujosan"
-        )
     
     # すでにファイルが存在する場合、上書きできるように一旦属性を解除する
-    if os.path.exists(CONFIG_FILE):
+    if os.path.exists(consts.CONFIG_PATH):
         try:
-            subprocess.run(["attrib", "-h", "-r", CONFIG_FILE])
+            subprocess.run(["attrib", "-h", "-r", consts.CONFIG_PATH])
         except Exception as e:
             print(e)
 
-    # JSONの書き込み
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4, ensure_ascii=False)
-    print("config.jsonの編集が完了しました．")
-
     # 再び隠しファイル＆読み取り専用に設定
     try:
-        subprocess.run(["attrib", "+h", "+r", CONFIG_FILE])
+        subprocess.run(["attrib", "+h", "+r", consts.CONFIG_PATH])
     except Exception as e:
         print(e)
 
