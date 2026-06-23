@@ -1,1 +1,2 @@
-from .do import auto_login, show_setup_gui, load_config
+from .do import auto_login
+from .gui import InputWindow

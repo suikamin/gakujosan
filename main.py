@@ -1,28 +1,23 @@
-from dir import show_setup_gui, load_config, auto_login
-from plyer import notification
-import sys, os, keyboard, subprocess
+from dir.setup import load_config
+import sys, os, subprocess
 
-if __name__ == "__main__" :
-    is_reset_mode = ("-r" in sys.argv or "--reset" in sys.argv) or keyboard.is_pressed("ctrl")
-    is_clear_mode = "-c" in sys.argv or "--clear" in sys.argv
+from dir.do import auto_login
+from dir.gui import InputWindow
+from dir.setup import save_json
 
-    if is_reset_mode:
-        show_setup_gui(existing_config=load_config())
-   
-    elif is_clear_mode:   
-        CONFIG_FILE = "config.json"
-        if os.path.exists(CONFIG_FILE):
-            try:
-                subprocess.run(["attrib", "-h", "-r", CONFIG_FILE])
-                os.remove(CONFIG_FILE)
-            except Exception as e:
-                print(e)
-        else:
-            print(f"{CONFIG_FILE}が見つかりませんでした")
-            sys.exit()
 
-    elif load_config() is None:
-        show_setup_gui(existing_config=None)
+config = {
+    "username" : {"displayName": "学情ID", "rawData": ""},
+    "password" : {"displayName": "パスワード", "rawData": ""},
+    "secret_key" : {"displayName": "秘密鍵", "rawData": ""}
+}
 
-    else:
-        auto_login()
+config = load_config()
+
+window = InputWindow(inputDict=config)
+window.show()
+print("debug:", window.inputDict)
+
+confing = window.inputDict;
+save_json(config)
+auto_login(config)
